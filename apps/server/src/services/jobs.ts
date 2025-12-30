@@ -53,3 +53,7 @@ export const updateJob = (jobId: string, update: Partial<Job>): Job | undefined 
   jobs.set(jobId, next);
   return next;
 };
+
+export const deleteJob = (jobId: string): void => {
+  jobs.delete(jobId);
+};

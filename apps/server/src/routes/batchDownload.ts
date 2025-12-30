@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import archiver from "archiver";
+import { cleanupJob } from "../services/cleanup";
 import { buildClipFileName } from "../services/ffmpeg";
 import { getJob } from "../services/jobs";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
@@ -57,14 +58,26 @@ export const registerBatchDownloadRoute = async (server: FastifyInstance) => {
       .header("Content-Disposition", `attachment; filename=\"${rootDir}.zip\"`);
 
     const archive = archiver("zip", { zlib: { level: 9 } });
+    let hadError = false;
+    const cleanupJobIds: string[] = [];
 
     archive.on("error", (error: unknown) => {
+      hadError = true;
       request.log.error(error);
       if (!reply.raw.headersSent) {
         reply.code(500);
       }
       const err = error instanceof Error ? error : new Error(String(error));
       reply.raw.destroy(err);
+    });
+
+    reply.raw.once("finish", () => {
+      if (hadError) {
+        return;
+      }
+      cleanupJobIds.forEach((jobId) => {
+        void cleanupJob(jobId);
+      });
     });
 
     const errors: string[] = [];
@@ -121,12 +134,17 @@ export const registerBatchDownloadRoute = async (server: FastifyInstance) => {
         } else if (missing > 0) {
           errors.push(`${jobId}: ${missing} clips missing`);
         }
+        if (added > 0) {
+          cleanupJobIds.push(jobId);
+        }
         continue;
       }
 
       const added = await addFilesFromDirectory(archive, clipsDir, entryRoot);
       if (added === 0) {
         errors.push(`${jobId}: no clips found`);
+      } else {
+        cleanupJobIds.push(jobId);
       }
     }
 

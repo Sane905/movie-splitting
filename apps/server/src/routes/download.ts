@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import archiver from "archiver";
+import { cleanupJob } from "../services/cleanup";
 import { getJob } from "../services/jobs";
 import { buildClipFileName } from "../services/ffmpeg";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
@@ -32,14 +33,22 @@ export const registerDownloadRoute = async (server: FastifyInstance) => {
       .header("Content-Disposition", `attachment; filename="clips_${jobId}.zip"`);
 
     const archive = archiver("zip", { zlib: { level: 9 } });
+    let hadError = false;
 
     archive.on("error", (error: unknown) => {
+      hadError = true;
       request.log.error(error);
       if (!reply.raw.headersSent) {
         reply.code(500);
       }
       const err = error instanceof Error ? error : new Error(String(error));
       reply.raw.destroy(err);
+    });
+
+    reply.raw.once("finish", () => {
+      if (!hadError) {
+        void cleanupJob(jobId);
+      }
     });
 
     let addedAny = false;

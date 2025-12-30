@@ -43,7 +43,7 @@ export const registerDownloadRoute = async (server: FastifyInstance) => {
     });
 
     let addedAny = false;
-    if (job?.mode === "all" && job.segments && job.segments.length > 0) {
+    if (job?.segments && job.segments.length > 0) {
       for (let i = 0; i < job.segments.length; i += 1) {
         const segment = job.segments[i];
         const fileName = buildClipFileName(segment, i);

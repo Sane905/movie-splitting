@@ -1,4 +1,4 @@
-import type { ParseMode, Segment } from "./parseIndex";
+import type { Segment } from "./parseIndex";
 
 export type JobState = "queued" | "processing" | "done" | "error";
 
@@ -7,7 +7,6 @@ export type Job = {
   state: JobState;
   progress: number;
   segments?: Segment[];
-  mode?: ParseMode;
   videoPath?: string;
   videoTitle?: string;
   indexTextPath?: string;

@@ -4,7 +4,7 @@ import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import { splitVideo } from "../services/ffmpeg";
 import { createJob, updateJob } from "../services/jobs";
-import { parseIndex, type ParseMode } from "../services/parseIndex";
+import { parseIndex } from "../services/parseIndex";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
 
 const storageRoot = path.resolve(process.cwd(), "..", "..", "storage");
@@ -24,7 +24,6 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
     const indexTextPath = path.join(jobDir, "index.txt");
     let videoTitle: string | undefined;
     let indexText = "";
-    let mode: ParseMode = "all";
     let savedVideo = false;
 
     for await (const part of request.parts()) {
@@ -53,10 +52,7 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
       }
 
       if (part.fieldname === "mode") {
-        const value = typeof part.value === "string" ? part.value : String(part.value);
-        if (value === "dawOnly") {
-        mode = "dawOnly";
-        }
+        continue;
       }
     }
 
@@ -71,7 +67,7 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
     }
 
     await fs.promises.writeFile(indexTextPath, indexText, "utf8");
-    const segments = parseIndex(indexText, mode);
+    const segments = parseIndex(indexText);
 
     if (process.env.NODE_ENV !== "production" && segments[0]) {
       request.log.info({ segment: segments[0] }, "parsed first segment");
@@ -79,7 +75,6 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
 
     updateJob(job.jobId, {
       segments,
-      mode,
       videoPath,
       videoTitle,
       indexTextPath,

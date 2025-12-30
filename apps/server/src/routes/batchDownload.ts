@@ -98,7 +98,7 @@ export const registerBatchDownloadRoute = async (server: FastifyInstance) => {
         : sanitizeFileName(jobId);
       const entryRoot = path.posix.join(rootDir, safeTitle);
 
-      if (job.mode === "all" && job.segments && job.segments.length > 0) {
+      if (job.segments && job.segments.length > 0) {
         let added = 0;
         let missing = 0;
         for (let i = 0; i < job.segments.length; i += 1) {

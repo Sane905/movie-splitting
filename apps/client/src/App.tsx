@@ -12,13 +12,6 @@ import {
 import { Progress } from "./components/ui/progress";
 import { Textarea } from "./components/ui/textarea";
 
-const modes = [
-  { value: "all", label: "All segments" },
-  { value: "dawOnly", label: "DAW only" },
-] as const;
-
-type ModeValue = (typeof modes)[number]["value"];
-
 type ServerStatus = {
   state: "queued" | "processing" | "done" | "error";
   progress: number;
@@ -38,7 +31,6 @@ type InputRow = {
   file: File | null;
   fileName: string | null;
   indexText: string;
-  mode: ModeValue;
   jobId?: string;
   status: RowStatus;
 };
@@ -54,7 +46,6 @@ const createRow = (): InputRow => ({
   file: null,
   fileName: null,
   indexText: "",
-  mode: "all",
   status: {
     state: "idle",
     progress: 0,
@@ -197,7 +188,6 @@ function App() {
       const formData = new FormData();
       formData.append("video", row.file);
       formData.append("indexText", row.indexText);
-      formData.append("mode", row.mode);
 
       try {
         const response = await fetch("/api/upload", {
@@ -309,7 +299,7 @@ function App() {
                   <CardHeader className="flex flex-row items-start justify-between gap-4">
                     <div>
                       <CardTitle>Input {index + 1}</CardTitle>
-                      <CardDescription>MP4 + index text + mode.</CardDescription>
+                      <CardDescription>MP4 + index text (mode fixed: all_segments).</CardDescription>
                     </div>
                     <Button
                       variant="ghost"
@@ -365,34 +355,6 @@ function App() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Mode</label>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {modes.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() =>
-                              dispatch({
-                                type: "update",
-                                id: row.id,
-                                patch: { mode: option.value },
-                              })
-                            }
-                            className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
-                              row.mode === option.value
-                                ? "border-slate-900 bg-slate-900 text-white"
-                                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                            }`}
-                          >
-                            <span className="block text-xs uppercase tracking-[0.2em] opacity-60">
-                              {option.value}
-                            </span>
-                            <span className="block text-base">{option.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -66,6 +66,10 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
     await fs.promises.writeFile(indexTextPath, indexText, "utf8");
     const segments = parseIndex(indexText, mode);
 
+    if (process.env.NODE_ENV !== "production" && segments[0]) {
+      request.log.info({ segment: segments[0] }, "parsed first segment");
+    }
+
     updateJob(job.jobId, {
       segments,
       mode,

@@ -1,0 +1,12 @@
+{
+  "name": "video-slicer",
+  "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}

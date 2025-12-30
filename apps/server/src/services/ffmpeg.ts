@@ -13,7 +13,7 @@ export type SplitVideoArgs = {
 
 const formatTime = (value: string): string => value.replace(/:/g, "");
 
-const buildFileName = (segment: Segment, index: number): string => {
+export const buildClipFileName = (segment: Segment, index: number): string => {
   const prefix = String(index + 1).padStart(2, "0");
   const range = `${formatTime(segment.start)}-${formatTime(segment.end)}`;
   const title = segment.title && segment.title.trim().length > 0 ? segment.title : "clip";
@@ -55,7 +55,7 @@ export const splitVideo = async ({
 
   for (let i = 0; i < segments.length; i += 1) {
     const segment = segments[i];
-    const fileName = buildFileName(segment, i);
+    const fileName = buildClipFileName(segment, i);
     const outputPath = path.join(outDir, fileName);
 
     await runFfmpeg([

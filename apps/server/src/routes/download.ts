@@ -3,6 +3,7 @@ import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import archiver from "archiver";
 import { getJob } from "../services/jobs";
+import { buildClipFileName } from "../services/ffmpeg";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
 
 const outputRoot = path.resolve(process.cwd(), "..", "..", "output");
@@ -41,7 +42,28 @@ export const registerDownloadRoute = async (server: FastifyInstance) => {
       reply.raw.destroy(err);
     });
 
-    archive.directory(clipsDir, safeTitle);
+    let addedAny = false;
+    if (job?.mode === "all" && job.segments && job.segments.length > 0) {
+      for (let i = 0; i < job.segments.length; i += 1) {
+        const segment = job.segments[i];
+        const fileName = buildClipFileName(segment, i);
+        const filePath = path.join(clipsDir, fileName);
+        try {
+          await fs.promises.access(filePath, fs.constants.R_OK);
+        } catch {
+          continue;
+        }
+        const folder = segment.daw === true ? "dawOnly" : "dawMaybeNotUse";
+        const entryName = path.posix.join(safeTitle, folder, fileName);
+        archive.file(filePath, { name: entryName });
+        addedAny = true;
+      }
+    }
+
+    if (!addedAny) {
+      archive.directory(clipsDir, safeTitle);
+    }
+
     void archive.finalize();
 
     return reply.send(archive);

@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { splitVideo } from "../services/ffmpeg";
 import { createJob, updateJob } from "../services/jobs";
 import { parseIndex, type ParseMode } from "../services/parseIndex";
+import { sanitizeFileName } from "../utils/sanitizeFileName";
 
 const storageRoot = path.resolve(process.cwd(), "..", "..", "storage");
 const outputRoot = path.resolve(process.cwd(), "..", "..", "output");
@@ -21,6 +22,7 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
 
     const videoPath = path.join(jobDir, "original.mp4");
     const indexTextPath = path.join(jobDir, "index.txt");
+    let videoTitle: string | undefined;
     let indexText = "";
     let mode: ParseMode = "all";
     let savedVideo = false;
@@ -34,6 +36,11 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
         if (savedVideo) {
           part.file.resume();
           continue;
+        }
+        if (part.filename) {
+          const baseName = path.parse(part.filename).name;
+          const sanitized = sanitizeFileName(baseName);
+          videoTitle = sanitized.length > 0 ? sanitized : undefined;
         }
         await pipeline(part.file, fs.createWriteStream(videoPath));
         savedVideo = true;
@@ -74,6 +81,7 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
       segments,
       mode,
       videoPath,
+      videoTitle,
       indexTextPath,
     });
 

@@ -9,6 +9,7 @@ export type Job = {
   segments?: Segment[];
   mode?: ParseMode;
   videoPath?: string;
+  videoTitle?: string;
   indexTextPath?: string;
   message?: string;
   error?: string;

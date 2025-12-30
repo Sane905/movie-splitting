@@ -1,6 +1,7 @@
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
+import { registerBatchDownloadRoute } from "./routes/batchDownload";
 import { registerDownloadRoute } from "./routes/download";
 import { registerStatusRoute } from "./routes/status";
 import { registerUploadRoute } from "./routes/upload";
@@ -26,6 +27,7 @@ const start = async () => {
   await registerUploadRoute(server);
   await registerDownloadRoute(server);
   await registerStatusRoute(server);
+  await registerBatchDownloadRoute(server);
 
   try {
     await server.listen({ port, host });

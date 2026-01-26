@@ -1,11 +1,5 @@
 # TODO.md (v2)
 
-## Phase 2: tRPC 基盤
-
-- [ ] TASK-02-4: 型共有が動くことを確認
-
----
-
 ## Phase 3: Job フロー（Upload）
 
 - [ ] TASK-03-1: `createJob` procedure を実装

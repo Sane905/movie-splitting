@@ -1,11 +1,5 @@
 # TODO.md (v2)
 
-## Phase 0: Baseline
-
-- [ ] TASK-00-3: Fastify + tRPC が共存する最小構成を確認
-
----
-
 ## Phase 1: S3互換ストレージ層（MinIO/R2）
 
 - [ ] TASK-01-1: docker-compose で MinIO を起動できるようにする

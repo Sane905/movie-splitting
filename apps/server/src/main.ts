@@ -1,5 +1,8 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
+import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
+import { appRouter } from "./trpc/router";
+import { createContext } from "./trpc/context";
 
 const server = Fastify({ logger: true });
 const port = Number(process.env.PORT) || 8787;
@@ -13,6 +16,10 @@ const start = async () => {
   }
 
   server.get("/api/health", async () => "ok");
+  await server.register(fastifyTRPCPlugin, {
+    prefix: "/trpc",
+    trpcOptions: { router: appRouter, createContext },
+  });
 
   try {
     await server.listen({ port, host });

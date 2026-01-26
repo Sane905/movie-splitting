@@ -2,7 +2,6 @@
 
 ## Phase 3: Job フロー（Upload）
 
-- [ ] TASK-03-4: `uploadComplete` procedure を実装
 - [ ] TASK-03-5: オブジェクト存在検証（HEAD）を追加
 
 ---

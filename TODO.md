@@ -23,14 +23,12 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 ### 1. リポジトリ・モノレポ基盤
 
 - [ ] `pnpm` workspaces をセットアップ
-
   - [ ] ルート `package.json` に `workspaces`（または `pnpm-workspace.yaml`）追加
   - [ ] ルートに `.gitignore`（`storage/`, `output/`, `node_modules/`, `dist/` 等）
 
 - [ ] `apps/client` を Vite + React + TS で作成
 - [ ] `apps/server` を Node + TS で作成（tsconfig、build、dev）
 - [ ] ルート scripts 整備
-
   - [ ] `pnpm dev` で client/server を同時起動（turbo or concurrently）
 
 **Done 条件**
@@ -57,7 +55,6 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 - [ ] 入力：索引テキスト（複数行）
 - [ ] 出力：`Segment[]`（`{ start, end, title?, daw?: boolean }`）
 - [ ] 仕様
-
   - [ ] `[HH:MM:SS – HH:MM:SS]` と `[HH:MM:SS - HH:MM:SS]` を両対応
   - [ ] `DAW操作：Yes` が近接行にあれば `daw=true`
   - [ ] `mode=dawOnly` の場合 `daw=true` のみ返す
@@ -101,7 +98,6 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 
 - [ ] `@fastify/multipart` 導入
 - [ ] `POST /api/upload`
-
   - [ ] fields：`video`（mp4）, `indexText`（string）, `mode`（optional）
   - [ ] `storage/<jobId>/original.mp4` にストリーム保存
   - [ ] indexText を保存（`storage/<jobId>/index.txt`）
@@ -120,7 +116,6 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 
 - [ ] `apps/server/src/services/ffmpeg.ts` 作成
 - [ ] `splitVideo({ inputPath, segments, outDir })`
-
   - [ ] 逐次ループで各セグメントを `spawn` 実行
   - [ ] `-ss start -to end -i input -c copy out.mp4`
   - [ ] 進捗更新：`i / segments.length` で job.progress を更新
@@ -137,7 +132,6 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 
 - [ ] `GET /api/download/:jobId`
 - [ ] zip 生成方法
-
   - [ ] `archiver` で `output/<jobId>/clips/` を zip にして返す
   - [ ] `Content-Type: application/zip`
   - [ ] `Content-Disposition: attachment; filename="clips_<jobId>.zip"`
@@ -165,11 +159,9 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 
 - [ ] Tailwind セットアップ
 - [ ] shadcn/ui 初期化＆必要コンポーネント追加
-
   - [ ] Button / Card / Textarea / Progress / Alert(or toast)
 
 - [ ] 1 画面構成
-
   - [ ] mp4 file input
   - [ ] 索引 textarea
   - [ ] mode（all / dawOnly）select or radio
@@ -217,3 +209,93 @@ TODO.md は、Codex（や自分）が迷わず実装を進めるための **作�
 
 必要ならこの TODO.md を、Codex が動きやすいように
 「1 タスク＝ 1PR 単位」みたいにさらに細分化した版も作れるで。
+
+# TODO.md (v2)
+
+## Phase 0: Baseline
+
+- [ ] TASK-00-1: 既存コードを AGENTS.md (v2) に合わせてリファクタできる状態にする
+- [ ] TASK-00-2: 不要になった REST エンドポイントをコメントアウト or 削除
+- [ ] TASK-00-3: Fastify + tRPC が共存する最小構成を確認
+
+---
+
+## Phase 1: S3互換ストレージ層（MinIO/R2）
+
+- [ ] TASK-01-1: docker-compose で MinIO を起動できるようにする
+- [ ] TASK-01-2: S3Client (AWS SDK v3) ラッパー `services/s3.ts` を作成
+- [ ] TASK-01-3: バケット存在チェック & 初期化処理を追加
+- [ ] TASK-01-4: presigned PUT/GET を生成する util を実装
+- [ ] TASK-01-5: ローカルから MinIO に PUT/GET できることを検証
+
+---
+
+## Phase 2: tRPC 基盤
+
+- [ ] TASK-02-1: Fastify に tRPC adapter を組み込む
+- [ ] TASK-02-2: tRPC router の雛形を作成
+- [ ] TASK-02-3: client 側に tRPC client を導入
+- [ ] TASK-02-4: 型共有が動くことを確認
+
+---
+
+## Phase 3: Job フロー（Upload）
+
+- [ ] TASK-03-1: `createJob` procedure を実装
+- [ ] TASK-03-2: `getUploadUrl` procedure を実装（presigned PUT）
+- [ ] TASK-03-3: フロントで R2/MinIO に直接 PUT する処理を実装
+- [ ] TASK-03-4: `uploadComplete` procedure を実装
+- [ ] TASK-03-5: オブジェクト存在検証（HEAD）を追加
+
+---
+
+## Phase 4: Index Parsing
+
+- [ ] TASK-04-1: parseIndex の正規表現を堅牢化
+- [ ] TASK-04-2: DAW操作 Yes/No の抽出ロジック追加
+- [ ] TASK-04-3: sanitizeFileName の共通 util 化
+- [ ] TASK-04-4: mode=all / dawOnly 切替に対応
+
+---
+
+## Phase 5: Processing Worker
+
+- [ ] TASK-05-1: `startProcess` procedure を実装
+- [ ] TASK-05-2: R2/MinIO からストリーム取得
+- [ ] TASK-05-3: ffmpeg spawn ラッパー作成
+- [ ] TASK-05-4: 逐次ループで分割処理
+- [ ] TASK-05-5: 進捗を jobs store に反映
+
+---
+
+## Phase 6: ZIP 生成 & 配布
+
+- [ ] TASK-06-1: archiver で zip 生成ロジック作成
+- [ ] TASK-06-2: zip を R2/MinIO にアップロード
+- [ ] TASK-06-3: `getDownloadUrl` procedure 実装
+- [ ] TASK-06-4: presigned GET で DL 可能にする
+
+---
+
+## Phase 7: Status & Cleanup
+
+- [ ] TASK-07-1: `getStatus` procedure 実装
+- [ ] TASK-07-2: フロントでポーリング表示
+- [ ] TASK-07-3: zip DL 後に R2 から削除する仕組み
+- [ ] TASK-07-4: 古い job の定期クリーンアップ
+
+---
+
+## Phase 8: UX polish
+
+- [ ] TASK-08-1: アップロード進捗表示
+- [ ] TASK-08-2: エラー時の再試行導線
+- [ ] TASK-08-3: 成功時の自動 DL
+
+---
+
+## Rule
+
+- TODO.md は「未完了タスクのみ」を残す
+- 完了したら削除 or DONE.md に移す
+- Codex には「TASK-xx を実装して」と依頼する

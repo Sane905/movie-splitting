@@ -9,3 +9,4 @@
 - [x] TASK-01-4: presigned PUT/GET を生成する util を実装
 - [x] TASK-01-5: ローカルから MinIO に PUT/GET できることを検証
 - [x] TASK-02-1: Fastify に tRPC adapter を組み込む
+- [x] TASK-02-2: tRPC router の雛形を作成

@@ -12,3 +12,4 @@
 - [x] TASK-02-2: tRPC router の雛形を作成
 - [x] TASK-02-3: client 側に tRPC client を導入
 - [x] TASK-02-4: 型共有が動くことを確認
+- [x] TASK-03-1: `createJob` procedure を実装

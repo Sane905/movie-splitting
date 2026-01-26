@@ -4,7 +4,7 @@ import type { FastifyInstance } from "fastify";
 import archiver from "archiver";
 import { cleanupJob } from "../services/cleanup";
 import { buildClipFileName } from "../services/ffmpeg";
-import { getJob } from "../services/jobs";
+import { getJob, getJobAssets } from "../services/jobs";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
 
 const outputRoot = path.resolve(process.cwd(), "..", "..", "output");
@@ -106,8 +106,9 @@ export const registerBatchDownloadRoute = async (server: FastifyInstance) => {
         continue;
       }
 
-      const safeTitle = job.videoTitle
-        ? sanitizeFileName(job.videoTitle)
+      const jobAssets = getJobAssets(jobId);
+      const safeTitle = jobAssets?.videoTitle
+        ? sanitizeFileName(jobAssets.videoTitle)
         : sanitizeFileName(jobId);
       const entryRoot = path.posix.join(rootDir, safeTitle);
 

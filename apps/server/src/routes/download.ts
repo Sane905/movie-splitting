@@ -3,7 +3,7 @@ import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import archiver from "archiver";
 import { cleanupJob } from "../services/cleanup";
-import { getJob } from "../services/jobs";
+import { getJob, getJobAssets } from "../services/jobs";
 import { buildClipFileName } from "../services/ffmpeg";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
 
@@ -24,8 +24,9 @@ export const registerDownloadRoute = async (server: FastifyInstance) => {
     }
 
     const job = getJob(jobId);
-    const safeTitle = job?.videoTitle
-      ? sanitizeFileName(job.videoTitle)
+    const jobAssets = getJobAssets(jobId);
+    const safeTitle = jobAssets?.videoTitle
+      ? sanitizeFileName(jobAssets.videoTitle)
       : sanitizeFileName(jobId);
 
     reply

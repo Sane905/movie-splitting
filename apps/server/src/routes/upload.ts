@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import { splitVideo } from "../services/ffmpeg";
-import { createJob, updateJob } from "../services/jobs";
+import { createJob, updateJob, updateJobAssets } from "../services/jobs";
 import { parseIndex } from "../services/parseIndex";
 import { sanitizeFileName } from "../utils/sanitizeFileName";
 
@@ -17,7 +17,8 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
     }
 
     const job = createJob();
-    const jobDir = path.join(storageRoot, job.jobId);
+    const jobId = job.id;
+    const jobDir = path.join(storageRoot, jobId);
     await fs.promises.mkdir(jobDir, { recursive: true });
 
     const videoPath = path.join(jobDir, "original.mp4");
@@ -57,12 +58,12 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
     }
 
     if (!savedVideo) {
-      updateJob(job.jobId, { state: "error", error: "missing video file" });
+      updateJob(jobId, { state: "error", error: "missing video file" });
       return reply.code(400).send({ error: "video file is required" });
     }
 
     if (!indexText.trim()) {
-      updateJob(job.jobId, { state: "error", error: "missing indexText" });
+      updateJob(jobId, { state: "error", error: "missing indexText" });
       return reply.code(400).send({ error: "indexText is required" });
     }
 
@@ -73,20 +74,22 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
       request.log.info({ segment: segments[0] }, "parsed first segment");
     }
 
-    updateJob(job.jobId, {
+    updateJob(jobId, {
       segments,
+    });
+    updateJobAssets(jobId, {
       videoPath,
       videoTitle,
       indexTextPath,
     });
 
-    const outDir = path.join(outputRoot, job.jobId, "clips");
+    const outDir = path.join(outputRoot, jobId, "clips");
 
     void (async () => {
-      updateJob(job.jobId, { state: "processing", progress: 0 });
+      updateJob(jobId, { state: "processing", progress: 0 });
       try {
         if (segments.length === 0) {
-          updateJob(job.jobId, { state: "done", progress: 100, message: "no segments" });
+          updateJob(jobId, { state: "done", progress: 100, message: "no segments" });
           return;
         }
 
@@ -96,19 +99,19 @@ export const registerUploadRoute = async (server: FastifyInstance) => {
           outDir,
           onProgress: (completed, total) => {
             const progress = Math.round((completed / total) * 100);
-            updateJob(job.jobId, { progress });
+            updateJob(jobId, { progress });
           },
         });
 
-        updateJob(job.jobId, { state: "done", progress: 100 });
+        updateJob(jobId, { state: "done", progress: 100 });
       } catch (error) {
-        updateJob(job.jobId, {
+        updateJob(jobId, {
           state: "error",
           error: error instanceof Error ? error.message : String(error),
         });
       }
     })();
 
-    return reply.send({ jobId: job.jobId });
+    return reply.send({ jobId });
   });
 };

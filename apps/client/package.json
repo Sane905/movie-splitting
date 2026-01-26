@@ -9,6 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@trpc/client": "^11.0.0",
+    "@trpc/react-query": "^11.0.0",
+    "@tanstack/react-query": "^5.90.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "react": "^18.2.0",

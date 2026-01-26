@@ -8,6 +8,7 @@ export type Segment = {
 export type ParseMode = "all" | "dawOnly";
 
 const dawRegex = /DAW操作\s*[:：]\s*Yes/i;
+const dawValueRegex = /DAW操作\s*[:：]\s*(Yes|No|YES|NO|あり|なし|有|無)/i;
 const timePattern = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
 const rangeSeparatorPattern = String.raw`[-\u2013\u2014\u2212~\u301c\uFF5E\u30fc\uFF0D]`;
 const blockHeaderRegex = new RegExp(
@@ -46,7 +47,11 @@ export const parseIndex = (text: string, mode: ParseMode = "all"): Segment[] => 
     const blockEnd = matches[i + 1]?.index ?? text.length;
     const block = text.slice(blockStart, blockEnd);
     const title = extractContentTitle(block) ?? "clip";
-    const daw = dawRegex.test(block) || undefined;
+    const dawMatch = dawValueRegex.exec(block);
+    const daw =
+      dawMatch !== null
+        ? ["yes", "あり", "有"].includes(dawMatch[1].toLowerCase())
+        : dawRegex.test(block) || undefined;
 
     segments.push({
       start,

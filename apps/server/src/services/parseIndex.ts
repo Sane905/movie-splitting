@@ -1,3 +1,5 @@
+import { sanitizeFileName } from "../utils/sanitizeFileName";
+
 export type Segment = {
   start: string;
   end: string;
@@ -32,7 +34,8 @@ const extractContentTitle = (block: string): string | undefined => {
   if (!match) {
     return undefined;
   }
-  return cleanTitle(match[1]);
+  const title = cleanTitle(match[1]);
+  return title ? sanitizeFileName(title) : undefined;
 };
 
 export const parseIndex = (text: string, mode: ParseMode = "all"): Segment[] => {

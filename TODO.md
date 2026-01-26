@@ -2,7 +2,6 @@
 
 ## Phase 4: Index Parsing
 
-- [ ] TASK-04-3: sanitizeFileName の共通 util 化
 - [ ] TASK-04-4: mode=all / dawOnly 切替に対応
 
 ---

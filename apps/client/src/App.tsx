@@ -233,10 +233,11 @@ function App() {
         const { jobId } = await createJobMutation.mutateAsync();
         dispatch({ type: "update", id: row.id, patch: { jobId } });
 
-        const { url } = await getUploadUrlMutation.mutateAsync({
-          jobId,
-          contentType: row.file.type || undefined,
-        });
+          const { url } = await getUploadUrlMutation.mutateAsync({
+            jobId,
+            contentType: row.file.type || undefined,
+            mode: "all",
+          });
         console.log("url", url);
         console.log("row.file", row.file);
 

@@ -20,3 +20,4 @@
 - [x] TASK-04-1: parseIndex の正規表現を堅牢化
 - [x] TASK-04-2: DAW操作 Yes/No の抽出ロジック追加
 - [x] TASK-04-3: sanitizeFileName の共通 util 化
+- [x] TASK-04-4: mode=all / dawOnly 切替に対応

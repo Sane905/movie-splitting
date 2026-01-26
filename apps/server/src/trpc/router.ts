@@ -12,6 +12,7 @@ const t = initTRPC.context<Context>().create();
 const uploadUrlInput = z.object({
   jobId: z.string().min(1),
   contentType: z.string().min(1).optional(),
+  mode: z.enum(["all", "dawOnly"]).optional(),
 });
 
 const uploadCompleteInput = z.object({
@@ -39,6 +40,9 @@ export const appRouter = t.router({
     const key = buildUploadKey(input.jobId);
     const url = await presignPutUrl({ key, contentType: input.contentType });
     updateJobAssets(input.jobId, { videoKey: key });
+    if (input.mode) {
+      updateJob(input.jobId, { mode: input.mode });
+    }
 
     return { jobId: input.jobId, key, url };
   }),

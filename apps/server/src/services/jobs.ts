@@ -7,6 +7,7 @@ export type Job = {
   state: JobState;
   progress: number;
   segments: Segment[];
+  mode?: "all" | "dawOnly";
   message?: string;
   error?: string;
   createdAt: number;

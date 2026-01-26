@@ -1,11 +1,5 @@
 # TODO.md (v2)
 
-## Phase 4: Index Parsing
-
-- [ ] TASK-04-4: mode=all / dawOnly 切替に対応
-
----
-
 ## Phase 5: Processing Worker
 
 - [ ] TASK-05-1: `startProcess` procedure を実装

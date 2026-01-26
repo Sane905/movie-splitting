@@ -5,6 +5,7 @@ import { createJob } from "../services/jobs";
 import { getJob, getJobAssets, updateJob, updateJobAssets } from "../services/jobs";
 import { ensureBucket } from "../services/bucket";
 import { presignPutUrl } from "../services/presign";
+import { headObject } from "../services/s3";
 
 const t = initTRPC.context<Context>().create();
 
@@ -41,7 +42,7 @@ export const appRouter = t.router({
 
     return { jobId: input.jobId, key, url };
   }),
-  uploadComplete: t.procedure.input(uploadCompleteInput).mutation(({ input }) => {
+  uploadComplete: t.procedure.input(uploadCompleteInput).mutation(async ({ input }) => {
     const job = getJob(input.jobId);
     if (!job) {
       throw new TRPCError({ code: "NOT_FOUND", message: "job not found" });
@@ -51,6 +52,13 @@ export const appRouter = t.router({
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "upload url not issued",
+      });
+    }
+    const exists = await headObject(assets.videoKey);
+    if (!exists) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "upload not found",
       });
     }
     updateJob(input.jobId, { message: "upload complete" });

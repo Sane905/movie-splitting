@@ -1,4 +1,9 @@
-import { S3Client, type S3ClientConfig } from "@aws-sdk/client-s3";
+import {
+  HeadObjectCommand,
+  S3Client,
+  type S3ClientConfig,
+} from "@aws-sdk/client-s3";
+import { resolveBucketName } from "./bucket";
 
 const resolveBoolean = (value?: string): boolean | undefined => {
   if (value === undefined) {
@@ -36,3 +41,13 @@ const buildConfig = (): S3ClientConfig => {
 export const createS3Client = (): S3Client => new S3Client(buildConfig());
 
 export const s3Client = createS3Client();
+
+export const headObject = async (key: string): Promise<boolean> => {
+  const bucket = resolveBucketName();
+  try {
+    await s3Client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    return true;
+  } catch {
+    return false;
+  }
+};

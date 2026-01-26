@@ -1,11 +1,5 @@
 # TODO.md (v2)
 
-## Phase 3: Job フロー（Upload）
-
-- [ ] TASK-03-5: オブジェクト存在検証（HEAD）を追加
-
----
-
 ## Phase 4: Index Parsing
 
 - [ ] TASK-04-1: parseIndex の正規表現を堅牢化

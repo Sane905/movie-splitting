@@ -17,3 +17,4 @@
 - [x] TASK-03-3: フロントで R2/MinIO に直接 PUT する処理を実装
 - [x] TASK-03-4: `uploadComplete` procedure を実装
 - [x] TASK-03-5: オブジェクト存在検証（HEAD）を追加
+- [x] TASK-04-1: parseIndex の正規表現を堅牢化

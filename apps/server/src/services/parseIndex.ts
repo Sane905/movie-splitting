@@ -8,8 +8,12 @@ export type Segment = {
 export type ParseMode = "all" | "dawOnly";
 
 const dawRegex = /DAW操作\s*[:：]\s*Yes/i;
-const blockHeaderRegex =
-  /■\s*\[(\d{2}:\d{2}:\d{2})\s*[-\u2013]\s*(\d{2}:\d{2}:\d{2})\]/g;
+const timePattern = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
+const rangeSeparatorPattern = String.raw`[-\u2013\u2014\u2212~\u301c\uFF5E\u30fc\uFF0D]`;
+const blockHeaderRegex = new RegExp(
+  String.raw`^\s*(?:[■□●◆・*-]|\d+[.)])?\s*[［\[\(（]?\s*(${timePattern})\s*${rangeSeparatorPattern}\s*(${timePattern})\s*[］\]\)）]?`,
+  "gm"
+);
 const contentRegex =
   /内容\s*[:：]\s*([\s\S]*?)(?=(?:種類|DAW操作|見るべき目的|操作内容)\s*[:：]|$)/;
 

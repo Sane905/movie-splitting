@@ -16,6 +16,7 @@ export type JobAssets = {
   videoPath?: string;
   videoTitle?: string;
   indexTextPath?: string;
+  videoKey?: string;
 };
 
 const jobs = new Map<string, Job>();

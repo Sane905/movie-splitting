@@ -13,3 +13,4 @@
 - [x] TASK-02-3: client 側に tRPC client を導入
 - [x] TASK-02-4: 型共有が動くことを確認
 - [x] TASK-03-1: `createJob` procedure を実装
+- [x] TASK-03-2: `getUploadUrl` procedure を実装（presigned PUT）

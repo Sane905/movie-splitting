@@ -2,7 +2,6 @@
 
 ## Phase 2: tRPC 基盤
 
-- [ ] TASK-02-1: Fastify に tRPC adapter を組み込む
 - [ ] TASK-02-2: tRPC router の雛形を作成
 - [ ] TASK-02-3: client 側に tRPC client を導入
 - [ ] TASK-02-4: 型共有が動くことを確認

@@ -1,11 +1,5 @@
 # TODO.md (v2)
 
-## Phase 1: S3互換ストレージ層（MinIO/R2）
-
-- [ ] TASK-01-5: ローカルから MinIO に PUT/GET できることを検証
-
----
-
 ## Phase 2: tRPC 基盤
 
 - [ ] TASK-02-1: Fastify に tRPC adapter を組み込む

@@ -7,3 +7,4 @@
 - [x] TASK-01-2: S3Client (AWS SDK v3) ラッパー `services/s3.ts` を作成
 - [x] TASK-01-3: バケット存在チェック & 初期化処理を追加
 - [x] TASK-01-4: presigned PUT/GET を生成する util を実装
+- [x] TASK-01-5: ローカルから MinIO に PUT/GET できることを検証

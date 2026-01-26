@@ -1,12 +1,15 @@
 import { HeadBucketCommand, CreateBucketCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "./s3";
 
-const resolveBucketName = (): string => {
+export const resolveBucketName = (): string => {
   const bucketName = process.env.S3_BUCKET;
-  if (!bucketName) {
-    throw new Error("S3_BUCKET is not set");
+  if (bucketName) {
+    return bucketName;
   }
-  return bucketName;
+  if (process.env.NODE_ENV !== "production") {
+    return "video-slicer-local";
+  }
+  throw new Error("S3_BUCKET is not set");
 };
 
 export const ensureBucket = async (): Promise<{ bucket: string }> => {

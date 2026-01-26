@@ -9,11 +9,16 @@ const resolveBoolean = (value?: string): boolean | undefined => {
 };
 
 const buildConfig = (): S3ClientConfig => {
+  const isDev = process.env.NODE_ENV !== "production";
   const region = process.env.S3_REGION ?? "us-east-1";
-  const endpoint = process.env.S3_ENDPOINT;
-  const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
-  const forcePathStyle = resolveBoolean(process.env.S3_FORCE_PATH_STYLE);
+  const endpoint =
+    process.env.S3_ENDPOINT ?? (isDev ? "http://127.0.0.1:9000" : undefined);
+  const accessKeyId =
+    process.env.S3_ACCESS_KEY_ID ?? (isDev ? "minioadmin" : undefined);
+  const secretAccessKey =
+    process.env.S3_SECRET_ACCESS_KEY ?? (isDev ? "minioadmin" : undefined);
+  const forcePathStyle =
+    resolveBoolean(process.env.S3_FORCE_PATH_STYLE) ?? (isDev ? true : undefined);
 
   const config: S3ClientConfig = {
     region,

@@ -13,6 +13,10 @@ const uploadUrlInput = z.object({
   contentType: z.string().min(1).optional(),
 });
 
+const statusInput = z.object({
+  jobId: z.string().min(1),
+});
+
 const buildUploadKey = (jobId: string): string => `jobs/${jobId}/original.mp4`;
 
 export const appRouter = t.router({
@@ -32,6 +36,19 @@ export const appRouter = t.router({
     updateJobAssets(input.jobId, { videoKey: key });
 
     return { jobId: input.jobId, key, url };
+  }),
+  getStatus: t.procedure.input(statusInput).query(({ input }) => {
+    const job = getJob(input.jobId);
+    if (!job) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "job not found" });
+    }
+
+    return {
+      state: job.state,
+      progress: job.progress,
+      message: job.message,
+      error: job.error,
+    };
   }),
   health: t.procedure.query(() => ({ status: "ok" })),
 });

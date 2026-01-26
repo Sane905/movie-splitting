@@ -1,14 +1,7 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client } from "./s3";
-
-const resolveBucketName = (): string => {
-  const bucketName = process.env.S3_BUCKET;
-  if (!bucketName) {
-    throw new Error("S3_BUCKET is not set");
-  }
-  return bucketName;
-};
+import { resolveBucketName } from "./bucket";
 
 type PresignPutArgs = {
   key: string;

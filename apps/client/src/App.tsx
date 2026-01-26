@@ -11,6 +11,7 @@ import {
 } from "./components/ui/card";
 import { Progress } from "./components/ui/progress";
 import { Textarea } from "./components/ui/textarea";
+import { trpc } from "./trpc/client";
 
 type ServerStatus = {
   state: "queued" | "processing" | "done" | "error";
@@ -72,7 +73,7 @@ const reducer = (state: InputRow[], action: Action): InputRow[] => {
                   ? { state: "idle", progress: 0 }
                   : row.status,
             }
-          : row
+          : row,
       );
     case "status":
       return state.map((row) =>
@@ -84,25 +85,64 @@ const reducer = (state: InputRow[], action: Action): InputRow[] => {
                 ...action.patch,
               },
             }
-          : row
+          : row,
       );
     default:
       return state;
   }
 };
 
+const uploadToPresignedUrl = (
+  url: string,
+  file: File,
+  onProgress?: (progress: number) => void,
+): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("PUT", url);
+
+    request.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable || !onProgress) {
+        return;
+      }
+      const next = Math.round((event.loaded / event.total) * 100);
+      onProgress(next);
+    });
+
+    request.addEventListener("load", () => {
+      if (request.status >= 200 && request.status < 300) {
+        resolve();
+        return;
+      }
+      reject(new Error(`Upload failed (${request.status})`));
+    });
+
+    request.addEventListener("error", () => {
+      reject(new Error("Upload failed."));
+    });
+
+    if (file.type) {
+      request.setRequestHeader("Content-Type", file.type);
+    }
+
+    request.send(file);
+  });
+
 function App() {
   const [rows, dispatch] = useReducer(reducer, [createRow()]);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [batchDownloading, setBatchDownloading] = useState(false);
+  const createJobMutation = trpc.createJob.useMutation();
+  const getUploadUrlMutation = trpc.getUploadUrl.useMutation();
+  const trpcUtils = trpc.useUtils();
 
   const jobs = useMemo(() => rows.filter((row) => row.jobId), [rows]);
   const allFinished = useMemo(() => {
     if (jobs.length === 0) {
       return false;
     }
-    return jobs.every((row) =>
-      row.status.state === "done" || row.status.state === "error"
+    return jobs.every(
+      (row) => row.status.state === "done" || row.status.state === "error",
     );
   }, [jobs]);
 
@@ -111,7 +151,7 @@ function App() {
       (row) =>
         row.jobId &&
         row.status.state !== "done" &&
-        row.status.state !== "error"
+        row.status.state !== "error",
     );
 
     if (activeRows.length === 0) {
@@ -121,11 +161,9 @@ function App() {
     const poll = () => {
       activeRows.forEach(async (row) => {
         try {
-          const response = await fetch(`/api/status/${row.jobId}`);
-          if (!response.ok) {
-            throw new Error("Failed to fetch status.");
-          }
-          const data = (await response.json()) as ServerStatus;
+          const data = (await trpcUtils.getStatus.fetch({
+            jobId: row.jobId ?? "",
+          })) as ServerStatus;
           const nextState: RowStatus = {
             state: data.state,
             progress: data.progress ?? 0,
@@ -139,7 +177,8 @@ function App() {
             id: row.id,
             patch: {
               state: "error",
-              error: err instanceof Error ? err.message : "Status check failed.",
+              error:
+                err instanceof Error ? err.message : "Status check failed.",
             },
           });
         }
@@ -149,7 +188,7 @@ function App() {
     poll();
     const timer = window.setInterval(poll, 1000);
     return () => window.clearInterval(timer);
-  }, [rows]);
+  }, [rows, trpcUtils]);
 
   const handleAddRow = () => {
     dispatch({ type: "add" });
@@ -161,6 +200,7 @@ function App() {
 
   const handleStart = async () => {
     setBatchError(null);
+    console.log("rows", rows);
 
     for (const row of rows) {
       if (row.jobId || row.status.state === "uploading") {
@@ -183,28 +223,35 @@ function App() {
         continue;
       }
 
-      dispatch({ type: "status", id: row.id, patch: { state: "uploading", progress: 0 } });
-
-      const formData = new FormData();
-      formData.append("video", row.file);
-      formData.append("indexText", row.indexText);
+      dispatch({
+        type: "status",
+        id: row.id,
+        patch: { state: "uploading", progress: 0 },
+      });
 
       try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        const { jobId } = await createJobMutation.mutateAsync();
+        dispatch({ type: "update", id: row.id, patch: { jobId } });
+
+        const { url } = await getUploadUrlMutation.mutateAsync({
+          jobId,
+          contentType: row.file.type || undefined,
+        });
+        console.log("url", url);
+        console.log("row.file", row.file);
+
+        await uploadToPresignedUrl(url, row.file, (progress) => {
+          dispatch({
+            type: "status",
+            id: row.id,
+            patch: { progress },
+          });
         });
 
-        if (!response.ok) {
-          throw new Error("Upload failed.");
-        }
-
-        const data = (await response.json()) as { jobId: string };
-        dispatch({ type: "update", id: row.id, patch: { jobId: data.jobId } });
         dispatch({
           type: "status",
           id: row.id,
-          patch: { state: "queued", progress: 0, error: undefined },
+          patch: { state: "queued", progress: 100, error: undefined },
         });
       } catch (err) {
         dispatch({
@@ -254,7 +301,9 @@ function App() {
       anchor.click();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setBatchError(err instanceof Error ? err.message : "Batch download failed.");
+      setBatchError(
+        err instanceof Error ? err.message : "Batch download failed.",
+      );
     } finally {
       setBatchDownloading(false);
     }
@@ -274,8 +323,8 @@ function App() {
             Split long lectures into focused clips.
           </h1>
           <p className="max-w-2xl text-base text-slate-600">
-            Paste your timestamp index, choose a mode, and export clips as a ZIP. The
-            processing stays on this machine.
+            Paste your timestamp index, choose a mode, and export clips as a
+            ZIP. The processing stays on this machine.
           </p>
         </header>
 
@@ -299,7 +348,9 @@ function App() {
                   <CardHeader className="flex flex-row items-start justify-between gap-4">
                     <div>
                       <CardTitle>Input {index + 1}</CardTitle>
-                      <CardDescription>MP4 + index text (mode fixed: all_segments).</CardDescription>
+                      <CardDescription>
+                        MP4 + index text (mode fixed: all_segments).
+                      </CardDescription>
                     </div>
                     <Button
                       variant="ghost"
@@ -312,7 +363,9 @@ function App() {
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">MP4 file</label>
+                      <label className="text-sm font-medium text-slate-700">
+                        MP4 file
+                      </label>
                       <div className="rounded-lg border border-dashed border-slate-200 bg-white/60 p-4">
                         <input
                           className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
@@ -354,7 +407,6 @@ function App() {
                         }
                       />
                     </div>
-
                   </CardContent>
                 </Card>
               ))}
@@ -363,7 +415,9 @@ function App() {
             <Card className="bg-white/80 backdrop-blur">
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-6">
                 <div>
-                  <p className="text-sm font-medium text-slate-800">Start processing</p>
+                  <p className="text-sm font-medium text-slate-800">
+                    Start processing
+                  </p>
                   <p className="text-xs text-slate-500">
                     Uploads will run in sequence to keep memory usage low.
                   </p>
@@ -379,7 +433,9 @@ function App() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Status</h2>
-                <p className="text-sm text-slate-600">Track each job independently.</p>
+                <p className="text-sm text-slate-600">
+                  Track each job independently.
+                </p>
               </div>
               {allFinished && (
                 <Button
@@ -401,13 +457,17 @@ function App() {
 
             <div className="space-y-4">
               {rows.map((row, index) => (
-                <Card key={`${row.id}-status`} className="bg-white/70 backdrop-blur">
+                <Card
+                  key={`${row.id}-status`}
+                  className="bg-white/70 backdrop-blur"
+                >
                   <CardHeader className="space-y-1">
                     <CardTitle className="text-base">
                       {row.fileName ?? `Input ${index + 1}`}
                     </CardTitle>
                     <CardDescription>
-                      State: <span className="font-medium">{row.status.state}</span>
+                      State:{" "}
+                      <span className="font-medium">{row.status.state}</span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -424,7 +484,9 @@ function App() {
                     ) : row.status.message ? (
                       <Alert variant="accent">
                         <AlertTitle>Note</AlertTitle>
-                        <AlertDescription>{row.status.message}</AlertDescription>
+                        <AlertDescription>
+                          {row.status.message}
+                        </AlertDescription>
                       </Alert>
                     ) : null}
                   </CardContent>

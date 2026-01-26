@@ -14,3 +14,4 @@
 - [x] TASK-02-4: 型共有が動くことを確認
 - [x] TASK-03-1: `createJob` procedure を実装
 - [x] TASK-03-2: `getUploadUrl` procedure を実装（presigned PUT）
+- [x] TASK-03-3: フロントで R2/MinIO に直接 PUT する処理を実装
